@@ -1,0 +1,90 @@
+from collections import deque
+import heapq as hq
+
+class PersonNode():
+
+    def __init__(self):
+        pass
+
+def readData():
+
+    # Initializing all needed variables
+    N, M = 0, 0
+    people = deque()
+    connections = deque() # Formatted { weight : (p1, p2) } # Remaining_edges
+    
+    new_row = input()
+    N = int( new_row[ : new_row.find(" ")]  )
+    M = int( new_row[ new_row.find(" ") : ] )
+
+    # Initializes all people 
+    for p in range(N):
+        people.append(p+1)
+    
+    for i in range(M):
+        new_row = input()
+        i1 = new_row.find(" ")
+        i2 = new_row.find(" ", i1 + 1)
+
+        p1 = int( new_row[ : i1 ] )
+        p2 = int( new_row[ i1+1 : i2 ] )
+        weight = int( new_row[ i2+1 : ] )
+
+        connections.appendleft( (weight, (p1, p2) ) )
+        hq.heapify(connections)
+        print(connections)
+        
+    #connections.sort( key=lambda weight: weight[0] )
+
+    return N, M, people, connections
+
+def jarnik(people, remaining_edges):
+
+    # Sorts a Tuple according to size
+    def sortTouple( t ):
+        if t[0] > t[1]:
+            return (t[1], t[0])
+        else:
+            return t
+
+    # Remaining edges [(dist, (p1, p2)), ... ]
+    def selectMinV( T, remaining_edges ):
+        
+        for min in remaining_edges:
+            dist = min[0]
+            p1 = min[1][0]
+            p2 = min[1][1]
+            #print(p1)
+            #print(p2)
+
+            if p1 in T.keys() and not (p2 in T.keys()):
+                #print(p2)
+                return p2, dist
+
+            elif p2 in T.keys() and not (p1 in T.keys()):
+                #print(p1)
+                return p1, dist
+
+    start = people.popleft()
+    Q = list(people)
+    T = dict()   # Formatted as {node connected to network : distance requiered}
+    T[start] = 0
+
+    while len(Q) != 0:
+        new_node, dist = selectMinV(T, remaining_edges)
+        Q.remove(new_node)
+        T[new_node] = dist
+
+
+    return T
+
+N, M, people, remaining_edges = readData()
+
+#print("Total length: ", end="")
+T = jarnik(people, remaining_edges)
+
+sum_dist = 0
+for keys in T.keys():
+    sum_dist += T[keys]
+
+print(sum_dist)
