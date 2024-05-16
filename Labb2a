@@ -1,0 +1,192 @@
+from collections import deque
+
+class WordNode():
+
+    def __init__(self, word, connections = None):
+        self._word = word
+
+        if connections == None:
+            self._connections = set()
+        else:
+            self._connections = connections
+
+        self._visited = False
+        self._prevNode = None
+
+        letters = list(word)
+        ending4_letters = []
+        for i in range( len(word) - 4 , len(word)):
+            ending4_letters.append(letters[i])
+        
+        self._last_letters = ending4_letters
+
+    def get_word(self):
+        return self._word
+
+    def get_last_letters(self):
+        return self._last_letters
+    
+    def add_connection( self, connectedNode ):
+        self._connections.add( connectedNode )
+
+    def get_connections(self):
+        return self._connections
+    
+    def mark_visited(self):
+        self._visited = True
+
+    def is_visited(self):
+        return self._visited
+    
+    def set_prev_node(self, node):
+        self._prevNode = node
+
+    def get_prev_node(self):
+        return self._prevNode
+
+    def __str__(self):
+        return self._word
+    
+    def equals(self, node):
+        if (self._word == node.get_word()):
+            return True
+        else:
+            return False
+
+    def copy(self):
+        return WordNode( self._word )
+
+
+def read_data():
+
+    # Initiate all words and quiries
+    N, Q = 0, 0
+    wordNodeSet = set()
+    quirie = list()
+
+    def find_node( word ):
+        for w in wordNodeSet:
+            if str(w) == word:
+                return w
+
+    def initiateNodeConnections( nodeSet ):
+    
+    # Checks for connection from word to con_word
+        for node in nodeSet:
+
+            for con_node in nodeSet:
+
+                if node == con_node:
+                    pass
+                else:
+
+                    con_node_list = list( con_node.get_word() )
+                    node_list = node.get_last_letters()
+
+                    for letter in node_list:
+                        
+                        if letter in con_node_list:
+                            con_node_list.remove( letter )
+                        
+                        else:
+                            break
+
+                        if len(con_node_list) == 1:
+                            node.add_connection( con_node )
+
+    # Read values for N and Q
+    row = input()
+    N = int( row[ : row.find(" ")]  )
+    Q = int( row[ row.find(" ") : ] )
+
+    # Read and create all word-nodes. Connection between nodes are handled in initiateNodeConnections
+    for i in range(N): 
+        word = input()
+        word = word.strip('\r')
+        w = WordNode( word )
+        wordNodeSet.add( w )
+
+    initiateNodeConnections( wordNodeSet )
+
+    # Read quiries and add into dict. Also formatted as nodes
+
+    for j in range(Q):
+        new_line = input()
+        node1 = find_node( new_line[ : new_line.find(" ") ] )
+        node2 = find_node( new_line[ new_line.find(" ") + 1 : ])
+        quirie.append( (node1, node2) )
+    return N, Q, wordNodeSet, quirie
+
+
+# Param: Set of words formatted in class WordNode
+
+
+# Breadth First search alhorithm 
+def BFS( start, end ):
+
+    visited = set()
+    start.set_prev_node(None)
+
+    q = deque()
+    visited.add(start)
+    q.append(start)
+
+    while len(q) != 0:
+        v = q.popleft()
+
+        if v.equals(end):
+
+            return v
+
+        for w in v.get_connections():
+
+            if v.equals(end):
+                w.set_prev_node(v)
+                return w
+            
+            elif not (w in visited):
+
+                visited.add(w)
+                w.set_prev_node(v)
+                q.append(w)
+
+
+
+    return None
+                    
+# Takes a dict with startNode : stopNode and forwards each contained quiry to BFS for pathfinding
+def findPaths( quiries ):
+
+    for start_stop in quiries:
+
+        w = BFS( start_stop[0], start_stop[1] )
+            
+
+        if w == None:
+            print("Impossible")
+
+        else:
+            n = 0
+            while w.get_prev_node() != None:
+                n += 1
+                w = w.get_prev_node()
+
+            print(n)
+
+def printAllNodes(N, Q, wordNodes, quiries):
+    print("N = "+str(N)+", Q = "+str(Q))
+    for n in wordNodes:
+        print( "Word: " + n.get_word() + ", Connections: ", end = "")
+        for c in n.get_connections():
+            print(str(c) + ", ", end = "")
+        print()
+
+    print("Quiries")
+    for key in quiries:
+        print( str(key[0]) + " - " + str(key[1]) )
+
+N, Q, wordNodes, quiries = read_data()
+
+#printAllNodes(N, Q, wordNodes, quiries)
+
+findPaths(quiries)
